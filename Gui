@@ -44,15 +44,20 @@ MainTab:CreateToggle({
     CurrentValue = false,
     Flag = "PerfectRelease_Toggle",
     Callback = function(Value)
-        if Value then
-            _G.PerfectRelease = true
+        _G.PerfectRelease = Value
+
+        -- Only hook once
+        if not _G.PerfectReleaseHooked then
+            _G.PerfectReleaseHooked = true
 
             -- Hook the action remote
             _G.bb = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
                 local method = getnamecallmethod()
                 local args = { ... }
 
-                if not checkcaller() 
+                -- Only run auto-perfect if toggle is ON
+                if _G.PerfectRelease 
+                    and not checkcaller() 
                     and method == "FireServer" 
                     and tostring(self) == "Action" 
                     and typeof(args[1]) == "table"
@@ -75,11 +80,8 @@ MainTab:CreateToggle({
 
                 return _G.bb(self, unpack(args))
             end))
-
-            print("Auto Perfect Release Enabled.")
-        else
-            _G.PerfectRelease = false
-            print("Auto Perfect Release Disabled.")
         end
+
+        print("Auto Perfect Release " .. (Value and "Enabled." or "Disabled."))
     end,
 })
