@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
 
@@ -31,14 +32,26 @@ ToggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 ToggleButton.TextColor3 = Color3.new(1, 1, 1)
 ToggleButton.Font = Enum.Font.SourceSansBold
 ToggleButton.TextScaled = true
-ToggleButton.Text = "AutoGuard: OFF"
+ToggleButton.Text = "AutoGuard / F: OFF"
 
 -- Button Logic
 ToggleButton.MouseButton1Click:Connect(function()
 	AutoGuardOn = not AutoGuardOn
-	ToggleButton.Text = "AutoGuard: " .. (AutoGuardOn and "ON" or "OFF")
+	ToggleButton.Text = "AutoGuard / F: " .. (AutoGuardOn and "ON" or "OFF")
 	if not AutoGuardOn then
 		CurrentTarget = nil
+	end
+end)
+
+-- F Key Toggle Logic
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == Enum.KeyCode.F then
+		AutoGuardOn = not AutoGuardOn
+        ToggleButton.Text = "AutoGuard / F: " .. (AutoGuardOn and "ON" or "OFF")
+		if not AutoGuardOn then
+			CurrentTarget = nil
+		end
 	end
 end)
 
@@ -77,21 +90,11 @@ RunService.RenderStepped:Connect(function()
 
 		if CurrentTarget and CurrentTarget.Character and CurrentTarget.Character:FindFirstChild("HumanoidRootPart") then
 			local targetHRP = CurrentTarget.Character.HumanoidRootPart
-			local direction = (targetHRP.Position - HumanoidRootPart.Position)
-			local distance = direction.Magnitude
+			local forwardVec = targetHRP.CFrame.LookVector
+			local targetPosition = targetHRP.Position + forwardVec * 5
 
-			if distance > 5 then
-				-- Move closer until 5 studs away
-				local moveDirection = direction.Unit
-				Humanoid:Move(moveDirection, false)
-			elseif distance < 5 then
-				-- Move back if too close
-				local moveDirection = -direction.Unit
-				Humanoid:Move(moveDirection, false)
-			else
-				-- Stay still if at exact distance
-				Humanoid:Move(Vector3.new(0,0,0), false)
-			end
+			local moveDirection = (targetPosition - HumanoidRootPart.Position).Unit
+			Humanoid:Move(moveDirection, false)
 		end
 	end
 end)
