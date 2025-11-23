@@ -1,0 +1,32 @@
+
+-- Auto Perfect Release (Converted for your game’s Action remote)
+
+local bb
+bb = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    local args = { ... }
+
+    -- Detect the shoot start packet
+    if not checkcaller() 
+        and method == "FireServer" 
+        and tostring(self) == "Action" 
+        and typeof(args[1]) == "table"
+        and args[1].Type == "Shoot"
+        and args[1].Shoot == true then
+        
+        -- Send original
+        bb(self, unpack(args))
+
+        -- Auto-perfect end shot
+        task.delay(0.43, newcclosure(function()
+            self.FireServer(self, {
+                Shoot = false,
+                Type = "Shoot"
+            })
+        end))
+        
+        return -- prevents double-firing
+    end
+
+    return bb(self, unpack(args))
+end))
